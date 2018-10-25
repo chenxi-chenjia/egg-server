@@ -1,5 +1,7 @@
 'use strict';
 
+const Token = require('../utils/token')
+
 module.exports = appInfo => {
     const config = exports = {};
 
@@ -34,26 +36,28 @@ module.exports = appInfo => {
 
     config.security = {
         csrf: false,
-        domainWhiteList: ['http://115.28.23.95:8011', 'localhost:9527'],
+        domainWhiteList: ['localhost:9528'],
     };
 
-    config.session = {
-        maxAge: 24 * 3600 * 1000, // ms
-        key: 'lidengData-session',
-        httpOnly: false
-    };
+    // config.session = {
+    //     maxAge: 24 * 3600 * 1000, // ms
+    //     key: 'lidengData-session',
+    //     httpOnly: false
+    // };
 
     config.userservice = {
         service: {
             async getUser(ctx) {
                 // Retrieve your user data from cookie, redis, db, whatever
                 // For common web applications using cookie, you may get session id with ctx.cookies
-
-                if (!ctx.session.user) {
+                let token = ctx.headers['server-token']
+                if (!token) {
                     return null;
                 }
-                const { userId, userName, isLogin, isSystem, roleId } = ctx.session.user;
-                return { userId, userName, isLogin, isSystem, roleId };
+
+                const tokenData = Token().exportToken(token)
+                const userData = tokenData.data
+                return { ...userData }
             },
 
             getUserId(ctx) {
@@ -74,7 +78,15 @@ module.exports = appInfo => {
 
 
     // add your config here
-    config.middleware = [];
+    config.middleware = [
+        'token'
+    ]
+
+    config.token = {
+
+    }
+
+
 
     return config;
 };
